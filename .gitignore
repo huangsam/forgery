@@ -1,0 +1,37 @@
+# Python
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info/
+
+# Virtual environments
+.venv/
+
+# Lockfiles: track uv.lock, ignore generic temp locks
+*.lock
+!uv.lock
+
+# Model weights & large binaries (Never commit to git)
+*.gguf
+*.safetensors
+*.bin
+*.pt
+*.pth
+*.onnx
+
+# Downloads & local cache directories
+downloads/
+data/
+.cache/
+*.incomplete
+
+# Generated transient Modelfiles
+Modelfile
+
+# OS & Editor
+.DS_Store
+*.swp
+.idea/
+.vscode/

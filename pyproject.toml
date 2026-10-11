@@ -1,0 +1,27 @@
+[project]
+name = "forgery"
+version = "0.1.0"
+description = "Local LLM model forge: download, merge, and register GGUFs in Ollama"
+readme = "README.md"
+authors = [
+    { name = "Samuel Huang", email = "samhuang91@gmail.com" }
+]
+requires-python = ">=3.14"
+dependencies = [
+    "gguf>=0.19.0",
+    "hf-transfer>=0.1.9",
+    "huggingface-hub>=2.2.0",
+]
+
+[project.scripts]
+forgery = "forgery:main"
+
+[build-system]
+requires = ["uv_build>=0.13.0,<0.14.0"]
+build-backend = "uv_build"
+
+[tool.ruff]
+line-length = 160
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
