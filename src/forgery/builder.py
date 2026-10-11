@@ -90,9 +90,9 @@ def generate_modelfile(
     lines.append(f"PARAMETER top_p {top_p}")
     lines.append(f"PARAMETER top_k {top_k}")
 
-    stops = stop_tokens or ["<|im_end|>", "<|endoftext|>"]
-    for stop in stops:
-        lines.append(f'PARAMETER stop "{stop}"')
+    if stop_tokens:
+        for stop in stop_tokens:
+            lines.append(f'PARAMETER stop "{stop}"')
 
     content = "\n".join(lines) + "\n"
     modelfile_path.write_text(content)
@@ -118,6 +118,7 @@ def build_pipeline(
     top_p: float = 0.95,
     top_k: int = 20,
     num_ctx: int | None = None,
+    stop_tokens: list[str] | None = None,
     cleanup_downloads: bool = False,
     cleanup_merged: bool = False,
 ) -> None:
@@ -146,6 +147,7 @@ def build_pipeline(
         top_p=top_p,
         top_k=top_k,
         num_ctx=num_ctx,
+        stop_tokens=stop_tokens,
     )
 
     # 4. Register with Ollama

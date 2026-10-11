@@ -74,6 +74,13 @@ def create_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Delete merged .gguf file after Ollama import completes",
     )
+    build_parser.add_argument(
+        "--stop",
+        action="append",
+        dest="stop_tokens",
+        default=None,
+        help="Custom stop token (can be repeated; defaults to GGUF header tokens)",
+    )
 
     return parser
 
@@ -103,6 +110,7 @@ def main() -> None:
             top_p=args.top_p,
             top_k=args.top_k,
             num_ctx=args.num_ctx,
+            stop_tokens=args.stop_tokens,
             cleanup_downloads=args.cleanup_downloads,
             cleanup_merged=args.cleanup_merged,
         )
