@@ -20,6 +20,23 @@ def check_tool(name: str, preferred_paths: list[str] | None = None) -> str:
     raise FileNotFoundError(f"Required binary '{name}' was not found. Please ensure it is installed and in your PATH.")
 
 
+def get_system_specs(work_dir: Path) -> tuple[float, float]:
+    """Return (total_ram_gb, free_disk_gb) for the host machine."""
+    try:
+        page_size = os.sysconf("SC_PAGE_SIZE")
+        phys_pages = os.sysconf("SC_PHYS_PAGES")
+        total_ram_gb = (page_size * phys_pages) / (1024**3)
+    except (AttributeError, ValueError, OSError):
+        total_ram_gb = 0.0
+
+    try:
+        free_disk_gb = shutil.disk_usage(work_dir).free / (1024**3)
+    except OSError:
+        free_disk_gb = 0.0
+
+    return total_ram_gb, free_disk_gb
+
+
 def download_shards(repo_id: str, quant_pattern: str, output_dir: Path) -> Path:
     """Download GGUF shards from Hugging Face."""
     # Enable high-performance Rust transfer if installed
@@ -134,9 +151,14 @@ def build_pipeline(
     merged_file = base_dir / f"{name.replace(':', '_')}.gguf"
     modelfile_path = base_dir / "Modelfile"
 
+    ram_gb, free_disk_gb = get_system_specs(base_dir)
+    max_b_params = ram_gb * 1.25
+
     print("=" * 60)
     print(f"  LLM Build Pipeline: {name}")
     print(f"  Source: {repo_id} [{quant}]")
+    if ram_gb > 0:
+        print(f"  Host: {ram_gb:.1f} GB RAM (est. max ~{max_b_params:.0f}B params @ 4-bit) | {free_disk_gb:.1f} GB Free Disk")
     print("=" * 60)
 
     # 1. Download
@@ -144,6 +166,13 @@ def build_pipeline(
 
     # 2. Merge
     target_gguf = find_and_merge_shards(download_dir, merged_file)
+    model_size_gb = target_gguf.stat().st_size / (1024**3)
+    wired_limit_gb = ram_gb * 0.75
+    if ram_gb > 0 and model_size_gb > wired_limit_gb:
+        print(
+            f"\n[!] ADVISORY: Model size ({model_size_gb:.1f} GB) exceeds estimated 75% wired memory limit ({wired_limit_gb:.1f} GB).\n"
+            "    Running this model in Ollama will likely cause severe swap thrashing or high latency.\n"
+        )
 
     # 3. Modelfile
     generate_modelfile(
