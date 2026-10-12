@@ -26,7 +26,7 @@ def get_system_specs(work_dir: Path) -> tuple[float, float]:
         page_size = os.sysconf("SC_PAGE_SIZE")
         phys_pages = os.sysconf("SC_PHYS_PAGES")
         total_ram_gb = (page_size * phys_pages) / (1024**3)
-    except (AttributeError, ValueError, OSError):
+    except AttributeError, ValueError, OSError:
         total_ram_gb = 0.0
 
     try:
