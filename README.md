@@ -1,22 +1,33 @@
-# Forgery: Local LLM Model Workshop
+# Forgery
 
-A local model forge for downloading, merging sharded GGUFs, and registering models in Ollama.
+A high-performance CLI pipeline for downloading, merging sharded GGUFs from Hugging Face, and registering them directly into Ollama on macOS.
 
-## Active Build: Qwen3.8-Flash-Next (UD-IQ4_XS)
-- **Model**: `qwen3.8-flash-next:iq4_xs` (176.9B params, `qwen4exp` architecture).
-- **Quantization**: 4-bit `UD-IQ4_XS` (~93.7 GB).
-- **Hardware Sizing**: Sized to sit directly under macOS's ~96 GB wired memory ceiling (on 128 GB Unified Memory) to prevent OS disk swap thrashing.
-- **Runtime Target**: Served by the local `launchd` Ollama daemon with a 64K context window (`OLLAMA_CONTEXT_LENGTH=65536`, `OLLAMA_KV_CACHE_TYPE=q8_0`).
+## Why Forgery?
+Hugging Face splits large models (>50 GB) into multi-part shards (`-00001-of-0000X.gguf`), which Ollama's native `hf.co` importer cannot assemble. `forgery` automates the entire workflow in a single hands-off command:
+- **Fast parallel downloads**: Rust-accelerated `hf-transfer` + parallel workers.
+- **Auto-merge**: Detects split shards and merges via `llama-gguf-split`.
+- **Template-aware**: Inherits native Jinja/ChatML templates and stop tokens from GGUF metadata.
+- **Hardware sizing**: Automatically inspects host RAM and warns if model exceeds macOS limits.
+- **Disk management**: `--cleanup-downloads` and `--cleanup-merged` to prevent SSD exhaustion.
 
-## Pipeline Toolchain (`src/forgery/`)
-- `uv run forgery build`: Native Python CLI using `huggingface_hub` and `llama-gguf-split`:
-  - Automatically downloads shards with Rust `hf-transfer` acceleration.
-  - Dynamically detects split parts (`*-00001-of-*.gguf`) and merges them.
-  - Generates `Modelfile` and registers with `ollama create`.
-  - Supports `--cleanup-downloads` and `--cleanup-merged` flags.
+## Prerequisites
+- [uv](https://docs.astral.sh/uv/): `brew install uv`
+- [Ollama](https://ollama.com): `brew install ollama`
+- [llama.cpp](https://github.com/ggerganov/llama.cpp): `brew install llama.cpp`
 
-## Quick Run
+## Usage
+
 ```bash
+# General syntax
+uv run forgery build --repo "<owner>/<repo>" --quant "<tag>" --name "<ollama-model-name>"
+
+# Example: Llama 3.3 70B (auto-merged & cleaned up)
+uv run forgery build \
+  --repo "bartowski/Llama-3.3-70B-Instruct-GGUF" \
+  --quant "Q4_K_M" \
+  --name "llama3.3:70b-q4_k_m" \
+  --cleanup-downloads
+
+# Inspect CLI options
 uv run forgery build --help
-ollama run qwen3.8-flash-next:iq4_xs
 ```
