@@ -61,7 +61,10 @@ def find_and_merge_shards(download_dir: Path, output_file: Path) -> Path:
     )
     print(f"[*] Identified first shard: {first_shard}")
 
-    split_bin = check_tool("llama-gguf-split", ["/opt/homebrew/bin/llama-gguf-split"])
+    split_bin = check_tool(
+        "llama-gguf-split",
+        ["/opt/homebrew/bin/llama-gguf-split", "/usr/local/bin/llama-gguf-split"],
+    )
 
     output_file.parent.mkdir(parents=True, exist_ok=True)
     cmd = [split_bin, "--merge", str(first_shard), str(output_file)]
@@ -102,7 +105,10 @@ def generate_modelfile(
 
 def register_with_ollama(model_name: str, modelfile_path: Path) -> None:
     """Register model with running Ollama daemon."""
-    ollama_bin = check_tool("ollama", ["/opt/homebrew/bin/ollama"])
+    ollama_bin = check_tool(
+        "ollama",
+        ["/opt/homebrew/bin/ollama", "/usr/local/bin/ollama"],
+    )
     cmd = [ollama_bin, "create", model_name, "-f", str(modelfile_path)]
     print(f"[*] Registering '{model_name}' with Ollama...")
     subprocess.run(cmd, check=True)
